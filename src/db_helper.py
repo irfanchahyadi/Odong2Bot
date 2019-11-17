@@ -6,6 +6,7 @@ Source: github.com/irfanchahyadi/Odong2Bot
 """
 
 import sqlite3, os
+from datetime import datetime
 
 class dbHelper():
 	def __init__(self, init_setup=False, db_name='bot.db'):
@@ -21,19 +22,36 @@ class dbHelper():
 	def add_cart(self, user_id, prod_id, quantity):
 		last_quantity = self.cur.execute('SELECT quantity FROM cart_items WHERE user_id = (?) AND prod_id =(?)', [user_id, prod_id]).fetchone()
 		if last_quantity:
-			stmt = 'UPDATE cart_items SET quantity = (?) WHERE user_id = (?) AND prod_id = (?)'
+			sql = 'UPDATE cart_items SET quantity = (?) WHERE user_id = (?) AND prod_id = (?)'
 			args = (last_quantity[0] + quantity, user_id, prod_id)
 		else:
-			stmt = 'INSERT INTO cart_items (user_id, prod_id, quantity) VALUES (?,?,?)'
+			sql = 'INSERT INTO cart_items (user_id, prod_id, quantity) VALUES (?,?,?)'
 			args = (user_id, prod_id, quantity)
-		self.con.execute(stmt, args)
+		self.con.execute(sql, args)
 		self.con.commit()
 
+	def add_user(self, user_id, username):
+		check_user = self.cur.execute('SELECT COUNT(*) FROM users WHERE user_id = (?)', (user_id,)).fetchone()
+		if not check_user:
+			sql = 'INSERT INTO users (user_id, username, join_date, last_menu) VALUES (?,?,?)'
+			args = (user_id, username, datetime.now(), 'MAIN')
+			self.con.execute(sql, args)
+			self.con.commit()
+	
+	def get_user_last_menu(self, user):
+		last_menu = self.cur.execute('SELECT last_menu FROM users WHERE user_id = (?)', user_id).fetchone()[0]
+		return last_menu
+
+	def set_user_last_menu(self, user, menu):
+		sql = 'UPDATE users SET last_menu = (?) WHERE user_id = (?)'
+		args = (menu, user_id)
+		self.con.execute(sql, args)
+		self.con.commit()
 
 	def initial_setup(self):
 		sql_script = """
 			CREATE TABLE products (
-				prod_id INT,
+				prod_id INTEGER PRIMARY KEY,
 				prod VARCHAR(50),
 				category VARCHAR(50),
 				price FLOAT,
@@ -42,9 +60,10 @@ class dbHelper():
 				description VARCHAR(255));
 
 			CREATE TABLE users (
-				user_id INT,
+				user_id INTEGER PRIMARY KEY,
 				username VARCHAR(50),
-				join_date DATETIME);
+				join_date DATETIME,
+				last_menu VARCHAR(50));
 
 			CREATE TABLE cart_items (
 				cart_item_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -53,7 +72,7 @@ class dbHelper():
 				quantity INT);
 			
 			CREATE TABLE orders (
-				order_id INT,
+				order_id INTEGER PRIMARY KEY AUTOINCREMENT,
 				user_id INT,
 				created_date DATETIME,
 				total_price FLOAT,
