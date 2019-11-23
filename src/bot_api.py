@@ -7,6 +7,7 @@ Source: github.com/irfanchahyadi/Odong2Bot
 
 import requests, json, time, urllib, os, dotenv
 from datetime import datetime
+from src.bot_message import KEYBOARD
 
 dotenv.load_dotenv()
 
@@ -15,6 +16,13 @@ class botAPI():
 		token = os.getenv('TOKEN')
 		self.base_url = 'https://api.telegram.org/bot{}/'.format(token)
 		self.timeout = 60
+
+	def get_me(self, key):
+		url = self.base_url + 'getMe'
+		res = requests.get(url)
+		jsn = res.json()
+		d = {'id': jsn['result']['id'], 'username': jsn['result']['username']}
+		return d[key]
 
 	def get_updates(self, offset):
 		url = self.base_url + 'getUpdates?timeout=' + str(self.timeout)
@@ -60,12 +68,15 @@ class botAPI():
 			else:
 				type = 'unknown'
 		elif 'callback_query' in msg.keys():
-			# print(msg)
 			type = 'callback_query'
 			user_id = msg['callback_query']['from']['id']
 			username = msg['callback_query']['from']['username']
+			if 'text' in msg['callback_query']['message'].keys():
+				text = msg['callback_query']['message']['text']
+			elif 'caption' in msg['callback_query']['message'].keys():
+				text = msg['callback_query']['message']['caption']
 			data = {'data': msg['callback_query']['data'], 
-					'text': msg['callback_query']['message']['text'],
+					'text': text,
 					'callback_query_id': msg['callback_query']['id'],
 					'message_id': msg['callback_query']['message']['message_id'],
 					'chat_id': msg['callback_query']['message']['chat']['id']}
@@ -92,11 +103,10 @@ class botAPI():
 
 	def extract_menu(self, text):
 		menu_dict = {}
-		menus = text.split('\n')[0][1:-1].split(']  [')
+		menus = text.split('\n')[1][1:-1].split(']  [')
 		for menu in menus:
 			k, v = menu.split(': ')
-			if len(v) > 0:
-				menu_dict[k] = v
+			menu_dict[k] = v
 		return menu_dict
 
 	def build_keyboard(self, menu):
@@ -106,9 +116,6 @@ class botAPI():
 		if menu in ['MAIN']:
 			keyb = [['Product List', 'My Cart'], 
 					['My Order', "Today's Promo"]]
-		elif menu in ['X']:
-			keyb = [['Sort', 'Filter'], 
-					['Search', 'Home']]
 		elif menu == 'CHECK OUT OPEN':
 			keyb = [[{'text':'Kirim Lokasi', 'request_location':True}],[{'text':'Kembali'}]]
 		elif menu == 'CHECK OUT INPG':
@@ -118,10 +125,9 @@ class botAPI():
 
 		# CREATE INLINE KEYBOARD
 		if menu in ['PRODUCT']:
-			ikeyb = [[{'text':'< Prev', 'callback_data':'Prev'}, {'text':'Order Product', 'callback_data':'Order'}, {'text':'Next >', 'callback_data':'Next'}],
-					 [{'text':'Sort', 'callback_data':'Sort'}, {'text':'Search', 'callback_data':'Search'}, {'text':'Filter', 'callback_data':'Filter'}]]
+			ikeyb = KEYBOARD['product']
 		elif menu in ['CART']:
-			ikeyb = [[{'text':'Edit', 'callback_data':'1'}, {'text':'Check Out', 'callback_data':'Check Out'}]]
+			ikeyb = [[{'text':'Edit', 'callback_data':'EditCart'}, {'text':'Check Out', 'callback_data':'CheckOut'}]]
 		else:
 			ikeyb = None
 		
@@ -135,6 +141,22 @@ class botAPI():
 			reply_markup['inline_keyboard'] = ikeyb
 		return json.dumps(reply_markup)
 
+	def delete_message(self, data):
+		url = self.base_url + 'deleteMessage?message_id={}&chat_id={}'.format(data['message_id'], data['chat_id'])
+		res = requests.get(url)
+
+	def send_photo(self, user_id, product):
+		caption = '*' + product[1] + '*\nPrice: ' + '{:0,.0f}'.format(product[2]) + ' \nDescription: ' + product[4] + '\n\nHow many?'
+		url = self.base_url + 'sendPhoto?chat_id={}&photo={}&caption={}&parse_mode=Markdown'.format(user_id, product[3], caption)
+		keyboard = [[]]
+		for i in range(1, 7):
+			if i < 6:
+				keyboard[0].append({'text': str(i), 'callback_data':'PutToCart' + str(product[0]) + 'pcs' + str(i)})
+			else:
+				keyboard[0].append({'text': 'More', 'callback_data':'PutToCart' + str(product[0]) + 'pcsMore'})
+		url += '&reply_markup={}'.format(json.dumps({'inline_keyboard': keyboard}))
+		requests.get(url)
+	
 	def send_message(self, user_id, text, menu):
 		text = urllib.parse.quote_plus(text)
 		url = self.base_url + 'sendMessage?chat_id={}&text={}&parse_mode=Markdown&disable_web_page_preview=True'.format(user_id, text)
@@ -145,31 +167,29 @@ class botAPI():
 		return self.extract_message(res, menu)
 
 	def edit_message(self, text, data):
-		print(text)
 		url_answer = self.base_url + 'answerCallbackQuery?callback_query_id={}'.format(data['callback_query_id'])
 		url = self.base_url + 'editMessageText?message_id={}&chat_id={}&text={}&parse_mode=Markdown&disable_web_page_preview=True'.format(data['message_id'], data['chat_id'], text)
-		if data['data'] in ['PRODUCT', 'Cancel'] or  data['data'].startswith('Sortby') or  data['data'].startswith('FCategory'):
-			keyboard = [[{'text':'< Prev', 'callback_data':'Prev'}, {'text':'Order Product', 'callback_data':'Order'}, {'text':'Next >', 'callback_data':'Next'}],
-						[{'text':'Sort', 'callback_data':'Sort'}, {'text':'Search', 'callback_data':'Search'}, {'text':'Filter', 'callback_data':'Filter'}]]
+		
+		if data['data'] in ['PRODUCT', 'Cancel', 'Clear', 'Prev', 'Next'] or  data['data'].startswith(('Sortby', 'FilterCategory', 'OrderProdId')):
+			keyboard = KEYBOARD['product']
 		elif data['data'] == 'Sort':
-			keyboard = [[{'text':'Sort by Highest Price', 'callback_data':'SortbyHighestPrice'}],
-						[{'text':'Sort by Lowest Price', 'callback_data':'SortbyLowestPrice'}],
-						[{'text':'Sort by Name A-Z', 'callback_data':'SortbyNameA-Z'}],
-						[{'text':'Sort by Name Z-A', 'callback_data':'SortbyNameZ-A'}],
-						[{'text':'Cancel', 'callback_data':'Cancel'}]]
+			keyboard = KEYBOARD['sort_product']
 		elif data['data'] == 'Search':
 			keyboard = None
 		elif data['data'] == 'Filter':
 			keyboard = []
 			for category in data['categories']:
-				# print(category[0])
-				keyboard.append([{'text':'Category: ' + category[0], 'callback_data':'FCategory' + category[0].replace(' ', '_')}])
+				keyboard.append([{'text':'Category: ' + category[0], 'callback_data':'FilterCategory' + category[0].replace(' ', '_')}])
 			keyboard.append([{'text':'Cancel', 'callback_data':'Cancel'}])
+		elif data['data'] == 'OrderProduct':
+			keyboard = []
+			for prod in data['products']:
+				keyboard.append([{'text': prod[0] + ' - ' + '{:0,.0f}'.format(prod[1]), 'callback_data':'OrderProdId' + str(prod[2])}])
 		else:
 			keyboard = None
 
 		if keyboard:
 			url += '&reply_markup={}'.format(json.dumps({'inline_keyboard': keyboard}))
-		requests.get(url).json()
+		res = requests.get(url).json()
 		requests.get(url_answer)
-		
+		# print(res)
