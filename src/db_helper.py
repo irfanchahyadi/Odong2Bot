@@ -5,8 +5,10 @@ Author: Irfan Chahyadi
 Source: github.com/irfanchahyadi/Odong2Bot
 """
 
-import sqlite3, os
+import sqlite3, os, json
 from datetime import datetime
+
+CLEAR_MENU = {'State': '', 'Sort': '', 'Filter': '', 'Search':'', 'Page': 1}
 
 class dbHelper():
 	def __init__(self, init_setup=False, db_name='bot.db'):
@@ -20,33 +22,73 @@ class dbHelper():
 			self.initial_setup()
 
 	def add_cart(self, user_id, prod_id, quantity):
-		last_quantity = self.cur.execute('SELECT quantity FROM cart_items WHERE user_id = (?) AND prod_id =(?)', [user_id, prod_id]).fetchone()
+		last_quantity = self.cur.execute('SELECT quantity FROM cart_items WHERE user_id = (?) AND prod_id =(?);', [user_id, prod_id]).fetchone()
 		if last_quantity:
-			sql = 'UPDATE cart_items SET quantity = (?) WHERE user_id = (?) AND prod_id = (?)'
+			sql = 'UPDATE cart_items SET quantity = (?) WHERE user_id = (?) AND prod_id = (?);'
 			args = (last_quantity[0] + quantity, user_id, prod_id)
 		else:
-			sql = 'INSERT INTO cart_items (user_id, prod_id, quantity) VALUES (?,?,?)'
+			sql = 'INSERT INTO cart_items (user_id, prod_id, quantity) VALUES (?,?,?);'
 			args = (user_id, prod_id, quantity)
 		self.con.execute(sql, args)
 		self.con.commit()
 
 	def add_user(self, user_id, username):
-		check_user = self.cur.execute('SELECT COUNT(*) FROM users WHERE user_id = (?)', (user_id,)).fetchone()
+		check_user = self.cur.execute('SELECT COUNT(*) FROM users WHERE user_id = (?);', (user_id,)).fetchone()[0]
 		if not check_user:
-			sql = 'INSERT INTO users (user_id, username, join_date, last_menu) VALUES (?,?,?)'
-			args = (user_id, username, datetime.now(), 'MAIN')
+			sql = 'INSERT INTO users (user_id, username, join_date, last_menu) VALUES (?,?,?,?);'
+			args = (user_id, username, datetime.now(), json.dumps(CLEAR_MENU))
 			self.con.execute(sql, args)
 			self.con.commit()
 	
-	def get_user_last_menu(self, user):
-		last_menu = self.cur.execute('SELECT last_menu FROM users WHERE user_id = (?)', user_id).fetchone()[0]
-		return last_menu
+	def get_user_last_menu(self, user_id):
+		last_menu = self.cur.execute('SELECT last_menu FROM users WHERE user_id = (?);', (str(user_id), )).fetchone()[0]
+		return json.loads(last_menu)
 
-	def set_user_last_menu(self, user, menu):
-		sql = 'UPDATE users SET last_menu = (?) WHERE user_id = (?)'
-		args = (menu, user_id)
+	def set_user_last_menu(self, user_id, menu):
+		if menu == 'clear':
+			menu = CLEAR_MENU
+		last_menu = self.get_user_last_menu(user_id)
+		last_menu.update(menu)
+		new_menu = json.dumps(last_menu)
+		sql = 'UPDATE users SET last_menu = (?) WHERE user_id = (?);'
+		args = (new_menu, user_id)
 		self.con.execute(sql, args)
 		self.con.commit()
+
+	def get_product_category(self):
+		sql = 'SELECT DISTINCT category FROM products;'
+		categories = self.con.execute(sql)
+		return categories.fetchall()
+
+	def get_product(self, menu=CLEAR_MENU):
+		args = None
+		sql = 'SELECT prod, price FROM products'
+		
+		if menu['Filter'] != '' and menu['Search'] != '':
+			sql += " WHERE category = '{}' AND prod like '%{}%'".format(menu['Filter'], menu['Search'])
+		elif menu['Filter'] != '':
+			sql += " WHERE category = '{}'".format(menu['Filter'])
+		elif menu['Search'] != '':
+			sql += " WHERE prod like '%{}%'".format(menu['Search'])
+		else:
+			pass
+
+		d = {'HighestPrice': 'price DESC', 'LowestPrice': 'price ASC', 'NameA-Z': 'prod ASC', 'NameZ-A': 'prod DESC'}
+		if menu['Sort'] != '':
+			m_sort = menu['Sort']
+			sql += " ORDER BY " + d[menu['Sort']]
+		else:
+			m_sort = ''
+		
+		list_product = self.con.execute(sql)
+		
+		message = ['\[Sort: {}]  \[Filter: {}]  \[Search: {}]  \[Page: {}]\n'.format(menu['Sort'], menu['Filter'], menu['Search'], menu['Page'])]
+		for row in list_product:
+			message.append(row[0] + ' - ' + '{:0,.0f}'.format(row[1]))
+
+		return '\n'.join(message)
+
+
 
 	def initial_setup(self):
 		sql_script = """
