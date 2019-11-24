@@ -127,7 +127,7 @@ class botAPI():
 		if menu in ['PRODUCT']:
 			ikeyb = KEYBOARD['product']
 		elif menu in ['CART']:
-			ikeyb = [[{'text':'Edit', 'callback_data':'EditCart'}, {'text':'Check Out', 'callback_data':'CheckOut'}]]
+			ikeyb = KEYBOARD['cart']
 		else:
 			ikeyb = None
 		
@@ -145,15 +145,23 @@ class botAPI():
 		url = self.base_url + 'deleteMessage?message_id={}&chat_id={}'.format(data['message_id'], data['chat_id'])
 		res = requests.get(url)
 
-	def send_photo(self, user_id, product):
-		caption = '*' + product[1] + '*\nPrice: ' + '{:0,.0f}'.format(product[2]) + ' \nDescription: ' + product[4] + '\n\nHow many?'
+	def send_photo(self, user_id, product, caption):
 		url = self.base_url + 'sendPhoto?chat_id={}&photo={}&caption={}&parse_mode=Markdown'.format(user_id, product[3], caption)
 		keyboard = [[]]
-		for i in range(1, 7):
-			if i < 6:
-				keyboard[0].append({'text': str(i), 'callback_data':'PutToCart' + str(product[0]) + 'pcs' + str(i)})
-			else:
-				keyboard[0].append({'text': 'More', 'callback_data':'PutToCart' + str(product[0]) + 'pcsMore'})
+		if len(product) == 7:
+			for i in range(7):
+				if i == 0:
+					keyboard.insert(0, [{'text': 'Remove', 'callback_data':'RemoveCart' + str(product[6])}])
+				elif i < 6:
+					keyboard[1].append({'text': str(i), 'callback_data':'PutToCart' + str(product[6]) + 'pcs' + str(i)})
+				else:
+					keyboard[1].append({'text': 'More', 'callback_data':'PutToCart' + str(product[6]) + 'pcsMore'})	
+		else:
+			for i in range(1, 7):
+				if i < 6:
+					keyboard[0].append({'text': str(i), 'callback_data':'PutToCart' + str(product[0]) + 'pcs' + str(i)})
+				else:
+					keyboard[0].append({'text': 'More', 'callback_data':'PutToCart' + str(product[0]) + 'pcsMore'})
 		url += '&reply_markup={}'.format(json.dumps({'inline_keyboard': keyboard}))
 		requests.get(url)
 	
@@ -185,6 +193,12 @@ class botAPI():
 			keyboard = []
 			for prod in data['products']:
 				keyboard.append([{'text': prod[0] + ' - ' + '{:0,.0f}'.format(prod[1]), 'callback_data':'OrderProdId' + str(prod[2])}])
+		elif data['data'] == 'EditCart':
+			keyboard = []
+			for item in data['cart']:
+				keyboard.append([{'text': item[0], 'callback_data':'EditCartId' + str(item[1])}])
+		elif data['data'] == 'RemoveCart':
+			keyboard = KEYBOARD['cart']
 		else:
 			keyboard = None
 

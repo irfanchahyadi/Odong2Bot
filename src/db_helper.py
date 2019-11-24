@@ -101,18 +101,34 @@ class dbHelper():
 			message = '\n'.join(message)
 		return message
 
-	def get_cart(self, user_id):
-		sql = 'SELECT c.quantity, p.prod, p.price FROM cart_items c INNER JOIN products p ON p.prod_id=c.prod_id WHERE c.user_id = {}'.format(user_id)
+	def get_cart(self, user_id, item_only=False):
+		sql = 'SELECT c.quantity, p.prod, p.price, c.cart_item_id FROM cart_items c INNER JOIN products p ON p.prod_id=c.prod_id WHERE c.user_id = {}'.format(user_id)
 		list_cart = self.con.execute(sql)
-		message = ['*Your Cart:*']
-		total = 0
-		for item in list_cart:
-			# .append(('' if row[0]>=10 else ' ') + '{:}'.format(row[0]) + ' x ' + row[1][:panjang] + (('.'*(panjang+3-len(row[1]))) if len(row[1])<panjang else '...') + ' @' + ('' if row[2]>=100000 else ' ')  + '{:0,.0f}'.format(row[2]))
-			message.append(('' if item[0]>=10 else ' ') + str(item[0]) + ' x ' + item[1] + ' @ {:0,.0f}'.format(item[2]))
-			total += item[0] * item[2]
-		message = '\n'.join(message)
-		message += '\n*Total: Rp ' + '{:0,.0f}'.format(total) + '*'
+
+		if item_only:
+			message = []
+			for item in list_cart:
+				message.append([('' if item[0]>=10 else ' ') + str(item[0]) + ' x ' + item[1] + ' @ {:0,.0f}'.format(item[2]), item[3]])
+		else:
+			message = ['*Your Cart:*']
+			total = 0
+			for item in list_cart:
+				message.append(('' if item[0]>=10 else ' ') + str(item[0]) + ' x ' + item[1] + ' @ {:0,.0f}'.format(item[2]))
+				total += item[0] * item[2]
+		
+			message = '\n'.join(message)
+			message += '\n*Total: Rp ' + '{:0,.0f}'.format(total) + '*'
 		return message
+
+	def get_cart_detail(self, item_id):
+		sql = "SELECT p.prod_id, p.prod, p.price, p.image_id, p.description, c.quantity, c.cart_item_id FROM cart_items c INNER JOIN products p ON p.prod_id=c.prod_id WHERE cart_item_id = '{}'".format(item_id)
+		return self.con.execute(sql).fetchone()
+	
+	def remove_cart(self, item_id):
+		sql = 'DELETE FROM cart_items WHERE cart_item_id = {};'.format(item_id)
+		print(sql)
+		self.con.execute(sql)
+		self.con.commit()
 
 	def initial_setup(self):
 		sql_script = """

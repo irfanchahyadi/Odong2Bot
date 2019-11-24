@@ -57,7 +57,8 @@ def handler(upd):
 					db.set_user_last_menu(upd['user_id'], 'clear')
 				elif data['data'].startswith('OrderProdId'):
 					product = db.get_product_detail(data['data'][11:])
-					api.send_photo(upd['user_id'], product)
+					caption = '*' + product[1] + '*\n\n*Price:* ' + '{:0,.0f}'.format(product[2]) + ' \n*Description:* ' + product[4] + '\n\nHow many?'
+					api.send_photo(upd['user_id'], product, caption)
 				elif data['data'].startswith('OrderProdOkId'):
 					prod_id, pcs = data['data'][13:].split('pcs')
 				elif data['data'] in ['Prev', 'Next']:
@@ -74,6 +75,19 @@ def handler(upd):
 			db.add_cart(upd['user_id'], prod_id, quantity)
 			api.delete_message(data)
 			api.send_message(upd['user_id'], MESSAGE['added_cart'], 'MAIN')
+		elif data['data'].startswith('EditCartId'):
+			item = db.get_cart_detail(data['data'][10:])
+			caption = '*' + item[1] + '*\n\n*Price:* ' + '{:0,.0f}'.format(item[2]) + ' \n*Description:* ' + item[4] + '\n*Quantity:* ' + str(item[5])
+			api.send_photo(upd['user_id'], item, caption)
+		elif data['data'] == 'EditCart':
+			text = 'Edit item on cart:'
+			data['cart'] = db.get_cart(upd['user_id'], item_only=True)
+			api.edit_message(text, data)
+		elif data['data'].startswith('RemoveCart'):
+			db.remove_cart(data['data'][10:])
+			text = db.get_cart(upd['user_id'])
+			api.edit_message(text, data)
+
 
 if __name__ == '__main__':
 	db = dbHelper(init_setup=False)

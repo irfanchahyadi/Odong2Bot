@@ -22,5 +22,8 @@ KEYBOARD = {
 	  [{'text':'Sort by Lowest Price', 'callback_data':'SortbyLowestPrice'}],
 	  [{'text':'Sort by Name A-Z', 'callback_data':'SortbyNameA-Z'}],
 	  [{'text':'Sort by Name Z-A', 'callback_data':'SortbyNameZ-A'}],
-	  [{'text':'Cancel', 'callback_data':'Cancel'}]]
+	  [{'text':'Cancel', 'callback_data':'Cancel'}]],
+
+	 'cart':
+	 [[{'text':'Edit', 'callback_data':'EditCart'}, {'text':'Check Out', 'callback_data':'CheckOut'}]]
 }
