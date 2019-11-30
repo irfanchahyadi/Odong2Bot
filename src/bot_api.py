@@ -89,6 +89,12 @@ class botAPI():
 		upd = {'update_id': update_id, 'type': type, 'date': date, 'user_id': user_id, 'username': username, 'data': data}
 		return upd
 
+	def get_address(self, lat, lon):
+		url = 'https://nominatim.openstreetmap.org/reverse?lat={}&lon={}&format=json'.format(lat, lon)
+		res = requests.get(url)
+		jsn = res.json()
+		return jsn['display_name']
+		
 	def extract_message(self, res, menu):
 		type = 'response_message'
 		user_id = res['result']['from']['id']
@@ -109,15 +115,15 @@ class botAPI():
 			menu_dict[k] = v
 		return menu_dict
 
-	def build_keyboard(self, menu):
+	def build_keyboard(self, menu, text):
 		reply_markup = {}
 		
 		# CREATE KEYBOARD
-		if menu in ['MAIN']:
+		if menu in ['MAIN'] or (menu == 'CART' and text.startswith('Your Cart is empty')):
 			keyb = [['Product List', 'My Cart'], 
 					['My Order', "Today's Promo"]]
-		elif menu == 'CHECK OUT OPEN':
-			keyb = [[{'text':'Kirim Lokasi', 'request_location':True}],[{'text':'Kembali'}]]
+		elif menu == 'CHECKOUT':
+			keyb = [[{'text':'Send Location', 'request_location':True}]]
 		elif menu == 'CHECK OUT INPG':
 			keyb = [[{'text':'Kirim Sekarang'}],[{'text':'Kirim Ulang Lokasi', 'request_location':True}],[{'text':'Kembali'}]]
 		else:
@@ -126,7 +132,7 @@ class botAPI():
 		# CREATE INLINE KEYBOARD
 		if menu in ['PRODUCT']:
 			ikeyb = KEYBOARD['product']
-		elif menu in ['CART']:
+		elif menu in ['CART'] and not text.startswith('Your Cart is empty'):
 			ikeyb = KEYBOARD['cart']
 		else:
 			ikeyb = None
@@ -146,29 +152,30 @@ class botAPI():
 		res = requests.get(url)
 
 	def send_photo(self, user_id, product, caption):
-		url = self.base_url + 'sendPhoto?chat_id={}&photo={}&caption={}&parse_mode=Markdown'.format(user_id, product[3], caption)
+		caption_parsed = urllib.parse.quote_plus(caption)
+		url = self.base_url + 'sendPhoto?chat_id={}&photo={}&caption={}&parse_mode=Markdown'.format(user_id, product[3], caption_parsed)
 		keyboard = [[]]
-		if len(product) == 7:
+		if len(product) == 7:   # for edit order in cart
 			for i in range(7):
 				if i == 0:
 					keyboard.insert(0, [{'text': 'Remove', 'callback_data':'RemoveCart' + str(product[6])}])
 				elif i < 6:
-					keyboard[1].append({'text': str(i), 'callback_data':'PutToCart' + str(product[6]) + 'pcs' + str(i)})
+					keyboard[1].append({'text': str(i), 'callback_data':'UpdateCart' + str(product[6]) + 'pcs' + str(i)})
 				else:
-					keyboard[1].append({'text': 'More', 'callback_data':'PutToCart' + str(product[6]) + 'pcsMore'})	
-		else:
+					keyboard[1].append({'text': 'More', 'callback_data':'UpdateCart' + str(product[6]) + 'pcsMore'})	
+		else:   # for add product to cart
 			for i in range(1, 7):
 				if i < 6:
-					keyboard[0].append({'text': str(i), 'callback_data':'PutToCart' + str(product[0]) + 'pcs' + str(i)})
+					keyboard[0].append({'text': str(i), 'callback_data':'AddToCart' + str(product[0]) + 'pcs' + str(i)})
 				else:
-					keyboard[0].append({'text': 'More', 'callback_data':'PutToCart' + str(product[0]) + 'pcsMore'})
+					keyboard[0].append({'text': 'More', 'callback_data':'AddToCart' + str(product[0]) + 'pcsMore'})
 		url += '&reply_markup={}'.format(json.dumps({'inline_keyboard': keyboard}))
 		requests.get(url)
 	
 	def send_message(self, user_id, text, menu):
-		text = urllib.parse.quote_plus(text)
-		url = self.base_url + 'sendMessage?chat_id={}&text={}&parse_mode=Markdown&disable_web_page_preview=True'.format(user_id, text)
-		keyboard = self.build_keyboard(menu)
+		text_parsed = urllib.parse.quote_plus(text)
+		url = self.base_url + 'sendMessage?chat_id={}&text={}&parse_mode=Markdown&disable_web_page_preview=True'.format(user_id, text_parsed)
+		keyboard = self.build_keyboard(menu, text)
 		if keyboard:
 			url += '&reply_markup={}'.format(keyboard)
 		res = requests.get(url).json()
@@ -176,7 +183,8 @@ class botAPI():
 
 	def edit_message(self, text, data):
 		url_answer = self.base_url + 'answerCallbackQuery?callback_query_id={}'.format(data['callback_query_id'])
-		url = self.base_url + 'editMessageText?message_id={}&chat_id={}&text={}&parse_mode=Markdown&disable_web_page_preview=True'.format(data['message_id'], data['chat_id'], text)
+		text_parsed = urllib.parse.quote_plus(text)
+		url = self.base_url + 'editMessageText?message_id={}&chat_id={}&text={}&parse_mode=Markdown&disable_web_page_preview=True'.format(data['message_id'], data['chat_id'], text_parsed)
 		
 		if data['data'] in ['PRODUCT', 'Cancel', 'Clear', 'Prev', 'Next'] or  data['data'].startswith(('Sortby', 'FilterCategory', 'OrderProdId')):
 			keyboard = KEYBOARD['product']

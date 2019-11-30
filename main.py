@@ -27,14 +27,40 @@ def handler(upd):
 			menu = db.get_user_last_menu(upd['user_id'])
 			text = db.get_products(menu)
 			api.send_message(upd['user_id'], text, 'PRODUCT')
-
+		elif db.get_user_last_menu(upd['user_id'])['State'].startswith('AddToCart'):
+			prod_id = db.get_user_last_menu(upd['user_id'])['State'][9:-7]
+			db.set_user_last_menu(upd['user_id'], {'State': ''})
+			if upd['data'].isdigit():
+				db.add_cart(upd['user_id'], prod_id, int(upd['data']))
+				api.send_message(upd['user_id'], MESSAGE['added_cart'], 'MAIN')
+		elif db.get_user_last_menu(upd['user_id'])['State'].startswith('UpdateCart'):
+			item_id = db.get_user_last_menu(upd['user_id'])['State'][10:-7]
+			db.set_user_last_menu(upd['user_id'], {'State': ''})
+			if upd['data'].isdigit():
+				db.update_cart(item_id, upd['data'])
+				text = db.get_cart(upd['user_id'])
+				api.send_message(upd['user_id'], text, 'CART')
+		elif db.get_user_last_menu(upd['user_id'])['State'] == 'CheckoutConfirmation':
+			last_menu = db.get_user_last_menu(upd['user_id'])
+			text = '*CHECKOUT CONFIRMATION'
+			text += '\n\n' + db.get_cart(upd['user_id']).replace('Your Cart:', 'Your Order:')
+			text += '\n\n*Delivery Address:*\n' + last_menu['Address']
+			text += '\n\n*Note:*\n' + upd['data']
+			text += '\n\n*Process?*'
+			api.send_message(upd['user_id'], text, 'NONE')
+	elif upd['type'] == 'location':
+		lat, lon = upd['data']
+		address = api.get_address(lat, lon)
+		db.set_user_last_menu(upd['user_id'], {'State': 'CheckoutConfirmation'})
+		db.set_user_last_menu(upd['user_id'], {'Address': address, 'Lat': lat, 'Lon': lon})
+		text = 'Delivery address:\n' + address + '\n\nadd note:'
+		api.send_message(upd['user_id'], text, 'NONE')
 	elif upd['type'] == 'callback_query':
 		data = upd['data']
 		if data['data'].startswith(('Sort', 'Search', 'Filter', 'Order', 'Clear', 'Next', 'Prev')):
 			if data['text'].split('\n')[0] == 'List Product':
 				menu = api.extract_menu(data['text'])
 				db.set_user_last_menu(upd['user_id'], menu)
-				
 			if data['data'] == 'Sort':
 				text = 'Sort by :'
 			elif data['data'] == 'Search':
@@ -70,7 +96,13 @@ def handler(upd):
 				menu = db.get_user_last_menu(upd['user_id'])
 				text = db.get_products(menu)
 			api.edit_message(text, data)
-		elif data['data'].startswith('PutToCart'):
+		elif data['data'].startswith('AddToCart') and data['data'].endswith('More'):
+			db.set_user_last_menu(upd['user_id'], {'State': data['data']})
+			api.delete_message(data)
+			prod = data['text'].split('\n')[0]
+			text = 'How many *' + prod + '* do you want?'
+			api.send_message(upd['user_id'], text, 'NONE')
+		elif data['data'].startswith('AddToCart'):
 			prod_id, quantity = data['data'][9:].split('pcs')
 			db.add_cart(upd['user_id'], prod_id, quantity)
 			api.delete_message(data)
@@ -79,18 +111,34 @@ def handler(upd):
 			item = db.get_cart_detail(data['data'][10:])
 			caption = '*' + item[1] + '*\n\n*Price:* ' + '{:0,.0f}'.format(item[2]) + ' \n*Description:* ' + item[4] + '\n*Quantity:* ' + str(item[5])
 			api.send_photo(upd['user_id'], item, caption)
+			api.delete_message(data)
 		elif data['data'] == 'EditCart':
 			text = 'Edit item on cart:'
 			data['cart'] = db.get_cart(upd['user_id'], item_only=True)
 			api.edit_message(text, data)
 		elif data['data'].startswith('RemoveCart'):
 			db.remove_cart(data['data'][10:])
+			api.delete_message(data)
 			text = db.get_cart(upd['user_id'])
-			api.edit_message(text, data)
+			api.send_message(upd['user_id'], text, 'CART')
+		elif data['data'].startswith('UpdateCart') and data['data'].endswith('More'):
+			db.set_user_last_menu(upd['user_id'], {'State': data['data']})
+			api.delete_message(data)
+			prod = data['text'].split('\n')[0]
+			text = 'How many *' + prod + '* do you want?'
+			api.send_message(upd['user_id'], text, 'NONE')
+		elif data['data'].startswith('UpdateCart'):
+			item_id, quantity = data['data'][10:].split('pcs')
+			db.update_cart(item_id, quantity)
+			api.delete_message(data)
+			text = db.get_cart(upd['user_id'])
+			api.send_message(upd['user_id'], text, 'CART')
+		elif data['data'] == 'CheckOut':
+			api.send_message(upd['user_id'], MESSAGE['checkout'], 'CHECKOUT')
 
 
 if __name__ == '__main__':
-	db = dbHelper(init_setup=False)
+	db = dbHelper(init_setup=True)
 	api = botAPI()
 	last_update_id = 0
 	print('Listening to: ' + api.get_me('username'))

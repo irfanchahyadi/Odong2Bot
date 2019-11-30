@@ -8,7 +8,7 @@ Source: github.com/irfanchahyadi/Odong2Bot
 import sqlite3, os, json
 from datetime import datetime
 
-CLEAR_MENU = {'State': '', 'Sort': '', 'Filter': '', 'Search':'', 'Page': 1}
+CLEAR_MENU = {'State': '', 'Sort': '', 'Filter': '', 'Search':'', 'Page': 1, 'Address': '', 'Lat': '', 'Lon': ''}
 
 class dbHelper():
 	def __init__(self, init_setup=False, db_name='bot.db'):
@@ -104,20 +104,23 @@ class dbHelper():
 	def get_cart(self, user_id, item_only=False):
 		sql = 'SELECT c.quantity, p.prod, p.price, c.cart_item_id FROM cart_items c INNER JOIN products p ON p.prod_id=c.prod_id WHERE c.user_id = {}'.format(user_id)
 		list_cart = self.con.execute(sql)
+		items = list_cart.fetchall()
 
 		if item_only:
 			message = []
-			for item in list_cart:
+			for item in items:
 				message.append([('' if item[0]>=10 else ' ') + str(item[0]) + ' x ' + item[1] + ' @ {:0,.0f}'.format(item[2]), item[3]])
-		else:
+		elif len(items) > 0:
 			message = ['*Your Cart:*']
 			total = 0
-			for item in list_cart:
+			for item in items:
 				message.append(('' if item[0]>=10 else ' ') + str(item[0]) + ' x ' + item[1] + ' @ {:0,.0f}'.format(item[2]))
 				total += item[0] * item[2]
 		
 			message = '\n'.join(message)
 			message += '\n*Total: Rp ' + '{:0,.0f}'.format(total) + '*'
+		else:
+			message = 'Your Cart is empty, please order in Product List.'
 		return message
 
 	def get_cart_detail(self, item_id):
@@ -126,7 +129,11 @@ class dbHelper():
 	
 	def remove_cart(self, item_id):
 		sql = 'DELETE FROM cart_items WHERE cart_item_id = {};'.format(item_id)
-		print(sql)
+		self.con.execute(sql)
+		self.con.commit()
+
+	def update_cart(self, item_id, quantity):
+		sql = 'UPDATE cart_items SET quantity = {} WHERE cart_item_id = {}'.format(quantity, item_id)
 		self.con.execute(sql)
 		self.con.commit()
 

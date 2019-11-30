@@ -1,15 +1,21 @@
 MESSAGE = {
 	'welcome': 
-	"""*Odong2 Online Shop*
-	Welcome to our shop, we provide a lot of high quality product.
-	Simple order process, you just sit in your favorite chair and we deliver to your front door.
-	Press this menu button.""",
+	"""*Odong2 Online Shop*\nWelcome to our shop, we provide a lot of high quality product.\nSimple order process, you just sit in your favorite chair and we deliver to your front door.\nPress this menu button.""",
 
 	'list_product':
 	"List our product",
 
 	'added_cart':
-	"Your order has been added to your cart"
+	"Your order has been added to your cart",
+
+	'removed_cart':
+	"Your order has been removed",
+
+	'updated_cart':
+	"Your order has been updated",
+
+	'checkout':
+	"For deliver your order, we need your location"
 }
 
 KEYBOARD = {
@@ -25,5 +31,8 @@ KEYBOARD = {
 	  [{'text':'Cancel', 'callback_data':'Cancel'}]],
 
 	 'cart':
-	 [[{'text':'Edit', 'callback_data':'EditCart'}, {'text':'Check Out', 'callback_data':'CheckOut'}]]
+	 [[{'text':'Edit', 'callback_data':'EditCart'}, {'text':'Check Out', 'callback_data':'CheckOut'}]],
+
+	 'checkout':
+	 [[{'text':'Send your location', 'callback_data':'SendLocation'}]],	 
 }
