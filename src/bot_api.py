@@ -94,18 +94,6 @@ class botAPI():
 		res = requests.get(url)
 		jsn = res.json()
 		return jsn['display_name']
-		
-	def extract_message(self, res, menu):
-		type = 'response_message'
-		user_id = res['result']['from']['id']
-		username = res['result']['from']['username']
-		data = {'text': res['result']['text'],
-				'data': menu,
-				'message_id': res['result']['message_id'],
-				'chat_id': res['result']['chat']['id']}
-		date = res['result']['date']
-		upd = {'type': type, 'date': date, 'user_id': user_id, 'username': username, 'data': data}
-		return upd
 
 	def extract_menu(self, text):
 		menu_dict = {}
@@ -134,6 +122,8 @@ class botAPI():
 			ikeyb = KEYBOARD['product']
 		elif menu in ['CART'] and not text.startswith('Your Cart is empty'):
 			ikeyb = KEYBOARD['cart']
+		elif menu == 'CHECKOUT_CONFIRMATION':
+			ikeyb = KEYBOARD['checkout_confirmation']
 		else:
 			ikeyb = None
 		
@@ -151,7 +141,13 @@ class botAPI():
 		url = self.base_url + 'deleteMessage?message_id={}&chat_id={}'.format(data['message_id'], data['chat_id'])
 		res = requests.get(url)
 
-	def send_photo(self, user_id, product, caption):
+	def send_promo(self, user_id, promo, caption):
+		caption_parsed = urllib.parse.quote_plus(caption)
+		url = self.base_url + 'sendPhoto?chat_id={}&photo={}&caption={}&parse_mode=Markdown'.format(user_id, promo, caption_parsed)
+		url += '&reply_markup={}'.format(self.build_keyboard('MAIN', caption))
+		a = requests.get(url).json()
+
+	def send_product(self, user_id, product, caption):
 		caption_parsed = urllib.parse.quote_plus(caption)
 		url = self.base_url + 'sendPhoto?chat_id={}&photo={}&caption={}&parse_mode=Markdown'.format(user_id, product[3], caption_parsed)
 		keyboard = [[]]
@@ -179,10 +175,13 @@ class botAPI():
 		if keyboard:
 			url += '&reply_markup={}'.format(keyboard)
 		res = requests.get(url).json()
-		return self.extract_message(res, menu)
+
+	def answer_callback(self, data):
+		url_answer = self.base_url + 'answerCallbackQuery?callback_query_id={}'.format(data['callback_query_id'])
+		requests.get(url_answer)
 
 	def edit_message(self, text, data):
-		url_answer = self.base_url + 'answerCallbackQuery?callback_query_id={}'.format(data['callback_query_id'])
+		self.answer_callback(data)
 		text_parsed = urllib.parse.quote_plus(text)
 		url = self.base_url + 'editMessageText?message_id={}&chat_id={}&text={}&parse_mode=Markdown&disable_web_page_preview=True'.format(data['message_id'], data['chat_id'], text_parsed)
 		
@@ -213,5 +212,3 @@ class botAPI():
 		if keyboard:
 			url += '&reply_markup={}'.format(json.dumps({'inline_keyboard': keyboard}))
 		res = requests.get(url).json()
-		requests.get(url_answer)
-		# print(res)

@@ -1,3 +1,10 @@
+
+"""
+Bot Message
+Author: Irfan Chahyadi
+Source: github.com/irfanchahyadi/Odong2Bot
+"""
+
 MESSAGE = {
 	'welcome': 
 	"""*Odong2 Online Shop*\nWelcome to our shop, we provide a lot of high quality product.\nSimple order process, you just sit in your favorite chair and we deliver to your front door.\nPress this menu button.""",
@@ -14,8 +21,11 @@ MESSAGE = {
 	'updated_cart':
 	"Your order has been updated",
 
-	'checkout':
-	"For deliver your order, we need your location"
+	'ask_location':
+	"For deliver your order, we need your location",
+
+	'added_order':
+	"Your order has been submitted, our team will deliver it immediately.\nYou can pay when you receive your order."
 }
 
 KEYBOARD = {
@@ -31,8 +41,8 @@ KEYBOARD = {
 	  [{'text':'Cancel', 'callback_data':'Cancel'}]],
 
 	 'cart':
-	 [[{'text':'Edit', 'callback_data':'EditCart'}, {'text':'Check Out', 'callback_data':'CheckOut'}]],
+	 [[{'text':'Edit', 'callback_data':'EditCart'}, {'text':'Check Out', 'callback_data':'Checkout'}]],
 
-	 'checkout':
-	 [[{'text':'Send your location', 'callback_data':'SendLocation'}]],	 
+	 'checkout_confirmation':
+	 [[{'text':'Cancel', 'callback_data':'CancelCheckout'}, {'text':'Process Checkout', 'callback_data':'ProcessCheckout'}]],	 
 }
