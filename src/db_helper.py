@@ -13,11 +13,11 @@ CLEAR_MENU = {'State': '', 'Sort': '', 'Filter': '', 'Search':'', 'Page': 1, 'Ad
 class dbHelper():
 	def __init__(self, init_setup=False, db_name='bot.db'):
 		self.db_name = db_name
-		self.n_prod = 5
+		self.n_prod = 10
 		if init_setup:
 			if db_name in os.listdir('src'):
 				os.remove('src/' + self.db_name)
-		self.con = sqlite3.connect('src/' + self.db_name)
+		self.con = sqlite3.connect('src/' + self.db_name, check_same_thread=False)
 		self.cur = self.con.cursor()
 		if init_setup:
 			self.initial_setup()
@@ -228,48 +228,46 @@ class dbHelper():
 				image_id VARCHAR(50));
 
 			INSERT INTO products VALUES
-				(1, 'Bango Manis Refil 600ml', 'Ingredients', 24600, 827, 'AgADBQADx6cxGzzjAAFULg_aWPgG56pBTsoyAARk3-t4a85mVEY1AgABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
-                (2, 'Bimoli Pouch 1L', 'Ingredients', 15100, 213, 'AgADBQADyKcxGzzjAAFUOEA87JSbTEb5SMoyAAQn-fwDT0Qh9Dk3AgABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
-                (3, 'Cadbury Dairy Milk 65gr', 'Snack', 14200, 94, 'AgADBQADyqcxGzzjAAFUIfGS5vYTrFOYRMoyAAQNQA8HZodpl-g0AgABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
-                (4, 'Daia Putih 900gr', 'Detergent Soap', 14300, 42, 'AgADBQADy6cxGzzjAAFUDkPiia3DpoqjRsoyAARFZz25YH-hJqc2AgABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
-                (5, 'Mama Lemon Pouch 800ml', 'Detergent Soap', 13700, 55, 'AgADBQADzKcxGzzjAAFUS80ftCtm5kpcLsoyAATR2xi8fwTcG-8SAwABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
-                (6, 'Molto All In 1 Blue 900ml', 'Detergent Soap', 25300, 55, 'AgADBQADzacxGzzjAAFUN6HutX6DJyQcHsoyAATxWyyc2mYfab4RAwABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
-                (7, 'Rinso Anti Noda 900gr', 'Detergent Soap', 17700, 17, 'AgADBQADzqcxGzzjAAFUh0UxUGe1XcsfLcoyAAQ2IZ-z1nO_850SAwABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
-                (8, 'Sunlight Lemon 800ml', 'Detergent Soap', 13700, 83, 'AgADBQADz6cxGzzjAAFUabzQkXibhMsmR8oyAAR6HWKw9XSmwfY4AgABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
-                (9, 'Vixal Pembersih Porselen 800ml','Detergent Soap', 14700, 232, 'AgADBQAD0KcxGzzjAAFUZyaZ4dHQyYLPH8oyAAQTAZ-As1OBW1IUAwABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
+				(1, 'Bango Manis Refil 600ml', 'Ingredients', 24600, 356, 'AgADBQADx6cxGzzjAAFULg_aWPgG56pBTsoyAARk3-t4a85mVEY1AgABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
+                (2, 'Bimoli Pouch 1L', 'Ingredients', 15100, 356, 'AgADBQADyKcxGzzjAAFUOEA87JSbTEb5SMoyAAQn-fwDT0Qh9Dk3AgABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
+                (3, 'Cadbury Dairy Milk 65gr', 'Snack', 14200, 356, 'AgADBQADyqcxGzzjAAFUIfGS5vYTrFOYRMoyAAQNQA8HZodpl-g0AgABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
+                (4, 'Daia Putih 900gr', 'Detergent Soap', 14300, 356, 'AgADBQADy6cxGzzjAAFUDkPiia3DpoqjRsoyAARFZz25YH-hJqc2AgABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
+                (5, 'Mama Lemon Pouch 800ml', 'Detergent Soap', 13700, 356, 'AgADBQADzKcxGzzjAAFUS80ftCtm5kpcLsoyAATR2xi8fwTcG-8SAwABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
+                (6, 'Molto All In 1 Blue 900ml', 'Detergent Soap', 25300, 356, 'AgADBQADzacxGzzjAAFUN6HutX6DJyQcHsoyAATxWyyc2mYfab4RAwABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
+                (7, 'Rinso Anti Noda 900gr', 'Detergent Soap', 17700, 356, 'AgADBQADzqcxGzzjAAFUh0UxUGe1XcsfLcoyAAQ2IZ-z1nO_850SAwABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
+                (8, 'Sunlight Lemon 800ml', 'Detergent Soap', 13700, 356, 'AgADBQADz6cxGzzjAAFUabzQkXibhMsmR8oyAAR6HWKw9XSmwfY4AgABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
+                (9, 'Vixal Pembersih Porselen 800ml','Detergent Soap', 14700, 356, 'AgADBQAD0KcxGzzjAAFUZyaZ4dHQyYLPH8oyAAQTAZ-As1OBW1IUAwABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
                 (10, 'Wipol Classic Pine 800ml', 'Detergent Soap', 14000, 356, 'AgADBQAD0acxGzzjAAFUqYZkRdsCp1i1VsoyAAQmcH75p5a-m7g2AgABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
-				(11, 'Silver Queen Original', 'Snack', 15900, 356, 'AgADBQAD0acxGzzjAAFUqYZkRdsCp1i1VsoyAAQmcH75p5a-m7g2AgABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
-				(12, 'Gulaku Premium 1kg', 'Ingredients', 12500, 356, 'AgADBQAD0acxGzzjAAFUqYZkRdsCp1i1VsoyAAQmcH75p5a-m7g2AgABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
-				(13, 'Bogasari Tepung Terigu 1kg', 'Ingredients', 11900, 356, 'AgADBQAD0acxGzzjAAFUqYZkRdsCp1i1VsoyAAQmcH75p5a-m7g2AgABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
-				(14, 'Mayumi Mayonnaise 100ml', 'Ingredients', 7900, 356, 'AgADBQAD0acxGzzjAAFUqYZkRdsCp1i1VsoyAAQmcH75p5a-m7g2AgABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
-				(15, 'La Fonte Bolognese 315gr', 'Ingredients', 19500, 356, 'AgADBQAD0acxGzzjAAFUqYZkRdsCp1i1VsoyAAQmcH75p5a-m7g2AgABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
-				(16, 'Lays Nori Seaweed 55gr', 'Snack', 9200, 356, 'AgADBQAD0acxGzzjAAFUqYZkRdsCp1i1VsoyAAQmcH75p5a-m7g2AgABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
-				(17, 'Pringles Original 107gr', 'Snack', 25000, 356, 'AgADBQAD0acxGzzjAAFUqYZkRdsCp1i1VsoyAAQmcH75p5a-m7g2AgABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
-				(18, 'Oreo Box Original', 'Snack', 21500, 356, 'AgADBQAD0acxGzzjAAFUqYZkRdsCp1i1VsoyAAQmcH75p5a-m7g2AgABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
-				(19, 'Fisherman Friend Citrus 25gr', 'Snack', 15000, 356, 'AgADBQAD0acxGzzjAAFUqYZkRdsCp1i1VsoyAAQmcH75p5a-m7g2AgABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
-				(20, 'Pocky Chocolate 47gr', 'Snack', 8500, 356, 'AgADBQAD0acxGzzjAAFUqYZkRdsCp1i1VsoyAAQmcH75p5a-m7g2AgABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
-				(21, 'KitKat Bar 35gr', 'Snack', 10500, 356, 'AgADBQAD0acxGzzjAAFUqYZkRdsCp1i1VsoyAAQmcH75p5a-m7g2AgABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
-				(22, 'Snickers', 'Snack', 14000,356, 'AgADBQAD0acxGzzjAAFUqYZkRdsCp1i1VsoyAAQmcH75p5a-m7g2AgABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
-				(23, 'Cornetto Classic', 'Snack', 14000,356, 'AgADBQAD0acxGzzjAAFUqYZkRdsCp1i1VsoyAAQmcH75p5a-m7g2AgABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
-				(24, 'Magnum Infinity', 'Snack', 14000,356, 'AgADBQAD0acxGzzjAAFUqYZkRdsCp1i1VsoyAAQmcH75p5a-m7g2AgABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
-				(25, 'Blueband 200gr', 'Ingredients', 14000,356, 'AgADBQAD0acxGzzjAAFUqYZkRdsCp1i1VsoyAAQmcH75p5a-m7g2AgABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
-				(26, 'Kraft Cheddar 175gr', 'Ingredients', 14000,356, 'AgADBQAD0acxGzzjAAFUqYZkRdsCp1i1VsoyAAQmcH75p5a-m7g2AgABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
-				(27, 'Sambal ABC', 'Ingredients', 14000,356, 'AgADBQAD0acxGzzjAAFUqYZkRdsCp1i1VsoyAAQmcH75p5a-m7g2AgABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
-				(28, 'Indomie Goreng', 'Instant Food', 14000,356, 'AgADBQAD0acxGzzjAAFUqYZkRdsCp1i1VsoyAAQmcH75p5a-m7g2AgABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
-				(29, 'Pop Mie Pedas Cup', 'Instant Food', 14000,356, 'AgADBQAD0acxGzzjAAFUqYZkRdsCp1i1VsoyAAQmcH75p5a-m7g2AgABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
-				(30, 'Super Bubur Instan', 'Instant Food', 14000,356, 'AgADBQAD0acxGzzjAAFUqYZkRdsCp1i1VsoyAAQmcH75p5a-m7g2AgABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
-				(31, 'Nissin Top Ramen', 'Instant Food', 14000,356, 'AgADBQAD0acxGzzjAAFUqYZkRdsCp1i1VsoyAAQmcH75p5a-m7g2AgABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
-				(32, 'Quaker Instant Oatmeal', 'Instant Food', 14000,356, 'AgADBQAD0acxGzzjAAFUqYZkRdsCp1i1VsoyAAQmcH75p5a-m7g2AgABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
-				(33, 'Koko Krunch Chocolate', 'Instant Food', 14000,356, 'AgADBQAD0acxGzzjAAFUqYZkRdsCp1i1VsoyAAQmcH75p5a-m7g2AgABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
-				(34, 'Chocolatos', 'Drinks', 14000,356, 'AgADBQAD0acxGzzjAAFUqYZkRdsCp1i1VsoyAAQmcH75p5a-m7g2AgABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
-				(35, 'Good Days Cappuccino', 'Drinks', 14000,356, 'AgADBQAD0acxGzzjAAFUqYZkRdsCp1i1VsoyAAQmcH75p5a-m7g2AgABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
-				(36, 'White Koffie Original', 'Drinks', 14000,356, 'AgADBQAD0acxGzzjAAFUqYZkRdsCp1i1VsoyAAQmcH75p5a-m7g2AgABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
-				(37, 'Nestle Milo 220gr', 'Drinks', 14000,356, 'AgADBQAD0acxGzzjAAFUqYZkRdsCp1i1VsoyAAQmcH75p5a-m7g2AgABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
-				(38, 'Nestcafe Classic', 'Drinks', 14000,356, 'AgADBQAD0acxGzzjAAFUqYZkRdsCp1i1VsoyAAQmcH75p5a-m7g2AgABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
-				(39, 'Nestea Lemon Tea 715gr', 'Drinks', 14000,356, 'AgADBQAD0acxGzzjAAFUqYZkRdsCp1i1VsoyAAQmcH75p5a-m7g2AgABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
-				(40, 'Max Tea Tarik 125gr', 'Drinks', 14000,356, 'AgADBQAD0acxGzzjAAFUqYZkRdsCp1i1VsoyAAQmcH75p5a-m7g2AgABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
-				
-                ;
+				(11, 'Silver Queen Original', 'Snack', 15900, 356, 'AgADBQADN6kxG1fXKFdf-k6ZdGdntzaPAjMABAEAAwIAA20AA6UdBgABFgQ', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
+				(12, 'Gulaku Premium 1kg', 'Ingredients', 12500, 356, 'AgADBQADKKkxG2y3KFeNX7uWd-qNJocmGzMABAEAAwIAA20AA5cLAQABFgQ', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
+				(13, 'Bogasari Tepung Terigu 1kg', 'Ingredients', 11900, 356, 'AgADBQADKakxG2y3KFeLGoA7MGXgDJS2JTMABAEAAwIAA20AA4R1AAIWBA', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
+				(14, 'Mayumi Mayonnaise 100ml', 'Ingredients', 7900, 356, 'AgADBQADKqkxG2y3KFf71CLmVcskVGskGzMABAEAAwIAA20AA48MAQABFgQ', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
+				(15, 'La Fonte Bolognese 315gr', 'Ingredients', 19500, 356, 'AgADBQADK6kxG2y3KFcUouCYy5ATwGuDAjMABAEAAwIAA20AAxc7BgABFgQ', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
+				(16, 'Lays Nori Seaweed 55gr', 'Snack', 9200, 356, 'AgADBQADLKkxG2y3KFf7bFm78yIvl06tJTMABAEAAwIAA20AA0B1AAIWBA', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
+				(17, 'Pringles Original 107gr', 'Snack', 25000, 356, 'AgADBQADLakxG2y3KFecAfVPjYoP7WzBJTMABAEAAwIAA20AA510AAIWBA', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
+				(18, 'Oreo Box Original', 'Snack', 21500, 356, 'AgADBQADLqkxG2y3KFfJW-Sl185ZLXs2GzMABAEAAwIAA20AA7oIAQABFgQ', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
+				(19, 'Fisherman Friend Citrus 25gr', 'Snack', 15000, 356, 'AgADBQADL6kxG2y3KFebrR1XGhcRbfIrGzMABAEAAwIAA20AAyYLAQABFgQ', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
+				(20, 'Pocky Chocolate 47gr', 'Snack', 8500, 356, 'AgADBQADMKkxG2y3KFcAAdUT1dOyD4sNKRszAAQBAAMCAANtAAOPBwEAARYE', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
+				(21, 'KitKat Bar 35gr', 'Snack', 10500, 356, 'AgADBQADMakxG2y3KFdVmsaG5MMQ0U64JTMABAEAAwIAA20AA0pyAAIWBA', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
+				(22, 'Snickers 51gr', 'Snack', 9900, 356, 'AgADBQADMqkxG2y3KFdYppEwrupqQtbDJTMABAEAAwIAA20AA5N3AAIWBA', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
+				(23, 'Cornetto Classic 82ml', 'Snack', 5000, 356, 'AgADBQADOakxG1fXKFcUAAEwns7lGktHhgIzAAQBAAMCAANtAAMHKgYAARYE', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
+				(24, 'Magnum Infinity 3 Bars', 'Snack', 35000, 356, 'AgADBQADOqkxG1fXKFd8QabH-V30Ote1JTMABAEAAwIAA20AAxR2AAIWBA', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
+				(25, 'Blueband 200gr', 'Ingredients', 7600, 356, 'AgADBQADPKkxG1fXKFf9uiBHaBe9QLSBAjMABAEAAwIAA20AA9I2BgABFgQ', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
+				(26, 'Kraft Cheddar 75gr', 'Ingredients', 22500, 356, 'AgADBQADM6kxG2y3KFdysRzw2KvIhRqQAjMABAEAAwIAA20AA9wtBgABFgQ', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
+				(27, 'Sambal ABC 335ml', 'Ingredients', 13900, 356, 'AgADBQADNKkxG2y3KFfJSdA5EQkrJqqJAjMABAEAAwIAA20AA8I0BgABFgQ', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
+				(28, 'Indomie Goreng 29gr', 'Instant Food', 3200, 356, 'AgADBQADNakxG2y3KFcnVPe0hVg8s_khGzMABAEAAwIAA20AA18LAQABFgQ', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
+				(29, 'Pop Mie Pedas Cup 57gr', 'Instant Food', 4600, 356, 'AgADBQADPakxG1fXKFfUukjja8dlEHQ2GzMABAEAAwIAA20AA_0MAQABFgQ', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
+				(30, 'Super Bubur Instan 51gr', 'Instant Food', 3500, 356, 'AgADBQAD8KkxG2cuKVfMxl2VBA6MvSwtGzMABAEAAwIAA20AA6wKAQABFgQ', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
+				(31, 'Nissin Top Ramen', 'Instant Food', 12800, 356, 'AgADBQADNqkxG2y3KFdFc-kBCteMiBI3GzMABAEAAwIAA20AA9QJAQABFgQ', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
+				(32, 'Quaker Instant Oatmeal 800gr', 'Instant Food', 46900, 356, 'AgADBQADN6kxG2y3KFeLibB5mlNI4tcyGzMABAEAAwIAA20AA3EKAQABFgQ', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
+				(33, 'Koko Krunch Chocolate 170gr', 'Instant Food', 19500, 356, 'AgADBQADOKkxG2y3KFfM9FnCnvn_mFivJTMABAEAAwIAA20AA_V2AAIWBA', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
+				(34, 'Chocolatos 4pcs', 'Drinks', 8900, 356, 'AgADBQADOakxG2y3KFc6YPA68PWMTogxGzMABAEAAwIAA20AA1gKAQABFgQ', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
+				(35, 'Good Days Cappuccino 5x25gr', 'Drinks', 9400, 356, 'AgADBQADOqkxG2y3KFci-n7YoKGJxTGjJTMABAEAAwIAA20AA0N0AAIWBA', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
+				(36, 'White Koffie Original 10x20gr', 'Drinks', 9900, 356, 'AgADBQADO6kxG2y3KFdd0khWHoWREN41GzMABAEAAwIAA20AA9EIAQABFgQ', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
+				(37, 'Nestle Milo 220gr', 'Drinks', 26800, 356, 'AgADBQADPKkxG2y3KFfiZNF54xDwQfm7JTMABAEAAwIAA20AA251AAIWBA', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
+				(38, 'Nestcafe Classic 50gr', 'Drinks', 15300, 356, 'AgADBQADPakxG2y3KFdIGhqMLTE3uAetJTMABAEAAwIAA20AA_B0AAIWBA', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
+				(39, 'Nestea Lemon Tea 715gr', 'Drinks', 39800, 356, 'AgADBQADPqkxG2y3KFdZ6wZ5t0ZMlY8oGzMABAEAAwIAA20AA1AHAQABFgQ', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
+				(40, 'Max Tea Tarik 5x25gr', 'Drinks', 11500, 356, 'AgADBQADP6kxG2y3KFeHNgWTQqdSRqbBJTMABAEAAwIAA20ABHUAAhYE', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.');
 
 			INSERT INTO active_promo VALUES
 				(1, "New year's promo", 'AgADBQADrKcxG9P_8Ffuiv20WVyDs-YzyjIABDa7HDuAONv62jACAAEC')

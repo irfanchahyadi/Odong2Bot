@@ -16,6 +16,13 @@ class botAPI():
 		token = os.getenv('TOKEN')
 		self.base_url = 'https://api.telegram.org/bot{}/'.format(token)
 		self.timeout = 60
+		res = self.set_webhook()
+		print('Set Webhook: ' + str(res['result']))
+
+	def set_webhook(self):
+		webhook_url = os.getenv('URL')
+		url = self.base_url + 'setWebhook?url=' + webhook_url
+		return requests.get(url).json()
 
 	def get_me(self, key):
 		url = self.base_url + 'getMe'
@@ -50,21 +57,24 @@ class botAPI():
 				longitude = msg['message']['location']['longitude']
 				data = (latitude, longitude)
 				print("[" + date_str + "] " + username + ":  Send location, latitude: " +  str(data[0]) + ', longitude: ' + str(data[1]))
-			elif 'caption' in msg['message'].keys():
-				if 'photo' in msg['message']['caption'].keys():
-					type = 'photo'
+			elif 'photo' in msg['message'].keys():
+				type = 'photo'
+				if 'caption' in msg['message']:
 					caption = msg['message']['caption']
-					file_id = msg['message']['photo'][0]['file_id']
-					data = (caption, file_id)
-					print("[" + date_str + "] " + username + ":  Send photo, caption: " +  ('\'\'' if data[0] == '' else data[0]) + ', file_id: ' + data[1])
-				elif 'document' in msg['message']['caption'].keys():
-					type = 'document'
-					caption = msg['message']['caption']
-					file_id = msg['message']['document']['file_id']
-					data = (caption, file_id)
-					print("[" + date_str + "] " + username + ":  Send document, caption: " +  ('\'\'' if data[0] == '' else data[0]) + ', file_id: ' + data[1])
 				else:
-					type = 'unknown'
+					caption = ''
+				file_id = msg['message']['photo'][0]['file_id']
+				data = (caption, file_id)
+				print("[" + date_str + "] " + username + ":  Send photo, caption: " +  ('\'\'' if data[0] == '' else data[0]) + ', file_id: ' + data[1])
+			elif 'document' in msg['message'].keys():
+				type = 'document'
+				if 'caption' in msg['message']:
+					caption = msg['message']['caption']
+				else:
+					caption = ''
+				file_id = msg['message']['document']['file_id']
+				data = (caption, file_id)
+				print("[" + date_str + "] " + username + ":  Send document, caption: " +  ('\'\'' if data[0] == '' else data[0]) + ', file_id: ' + data[1])
 			else:
 				type = 'unknown'
 		elif 'callback_query' in msg.keys():
@@ -86,6 +96,9 @@ class botAPI():
 			print("[" + date_str + "] " + username + ":  Send callback_query, data: " +  str(data['data']))
 		else:
 			type = 'unknown'
+
+		if type == 'unknown':
+			data = ''
 		upd = {'update_id': update_id, 'type': type, 'date': date, 'user_id': user_id, 'username': username, 'data': data}
 		return upd
 
@@ -185,7 +198,7 @@ class botAPI():
 		text_parsed = urllib.parse.quote_plus(text)
 		url = self.base_url + 'editMessageText?message_id={}&chat_id={}&text={}&parse_mode=Markdown&disable_web_page_preview=True'.format(data['message_id'], data['chat_id'], text_parsed)
 		
-		if data['data'] in ['PRODUCT', 'Cancel', 'Clear', 'Prev', 'Next'] or  data['data'].startswith(('Sortby', 'FilterCategory', 'OrderProdId')):
+		if data['data'] in ['PRODUCT', 'Cancel', 'Clear', 'CancelToProduct', 'Prev', 'Next'] or  data['data'].startswith(('Sortby', 'FilterCategory', 'OrderProdId')):
 			keyboard = KEYBOARD['product']
 		elif data['data'] == 'Sort':
 			keyboard = KEYBOARD['sort_product']
@@ -195,7 +208,7 @@ class botAPI():
 			keyboard = []
 			for category in data['categories']:
 				keyboard.append([{'text':'Category: ' + category[0], 'callback_data':'FilterCategory' + category[0].replace(' ', '_')}])
-			keyboard.append([{'text':'Cancel', 'callback_data':'Cancel'}])
+			keyboard.append([{'text':'Cancel', 'callback_data':'CancelToProduct'}])
 		elif data['data'] == 'OrderProduct':
 			keyboard = []
 			for prod in data['products']:
