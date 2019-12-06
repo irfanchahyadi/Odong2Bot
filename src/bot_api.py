@@ -16,13 +16,11 @@ class botAPI():
 		token = os.getenv('TOKEN')
 		self.base_url = 'https://api.telegram.org/bot{}/'.format(token)
 		self.timeout = 60
-		res = self.set_webhook()
-		print('Set Webhook: ' + str(res['result']))
 
 	def set_webhook(self):
 		webhook_url = os.getenv('URL')
 		url = self.base_url + 'setWebhook?url=' + webhook_url
-		return requests.get(url).json()
+		return requests.get(url).json()['ok']
 
 	def get_me(self, key):
 		url = self.base_url + 'getMe'

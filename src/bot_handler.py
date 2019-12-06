@@ -14,6 +14,10 @@ class Handler():
 		self.db = dbHelper(init_setup=False)
 		self.api = botAPI()
 
+	def set_webhook(self):
+		res = self.api.set_webhook()
+		return res
+
 	def get_me(self):
 		return self.api.get_me('username')
 

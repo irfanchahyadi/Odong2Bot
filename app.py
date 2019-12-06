@@ -5,23 +5,29 @@ Author: Irfan Chahyadi
 Source: github.com/irfanchahyadi/Odong2Bot
 """
 
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from src.bot_handler import Handler
 import os
 
 app = Flask(__name__)
+handler = Handler()
 
 @app.route('/', methods=['GET', 'POST'])
-def test():
+def webhook():
 	if request.method == 'POST':
 		req = request.get_json()
 		upd = handler.extract_updates(req)
 		handler.handle(upd)
 	return 'ok'
 
+@app.route('/set_webhook')
+def set_webhook():
+	res = handler.set_webhook()
+	data = {'result': res}
+	return jsonify(data)
+
 
 if __name__ == "__main__":
-	handler = Handler()
 	app.run(threaded=True)
 
 
