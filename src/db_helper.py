@@ -5,44 +5,50 @@ Author: Irfan Chahyadi
 Source: github.com/irfanchahyadi/Odong2Bot
 """
 
-import sqlite3, os, json
+import pymysql, json, dotenv, os
 from datetime import datetime
 
 CLEAR_MENU = {'State': '', 'Sort': '', 'Filter': '', 'Search':'', 'Page': 1, 'Address': '', 'Lat': '', 'Lon': '', 'Note': ''}
+dotenv.load_dotenv()
 
 class dbHelper():
 	def __init__(self, init_setup=False, db_name='bot.db'):
-		self.db_name = db_name
+		user = os.getenv('MYSQL_USERNAME')
+		pwd  = os.getenv('MYSQL_PASSWORD')
+		db   = os.getenv('MYSQL_DATABASE')
+		host = os.getenv('MYSQL_HOSTNAME')
 		self.n_prod = 10
-		if init_setup:
-			if db_name in os.listdir('src'):
-				os.remove('src/' + self.db_name)
-		self.con = sqlite3.connect('src/' + self.db_name, check_same_thread=False)
-		self.cur = self.con.cursor()
-		if init_setup:
-			self.initial_setup()
+		self.con = pymysql.connect(user=user, password=pwd, database=db, host=host, autocommit=True)
 
 	def add_cart(self, user_id, prod_id, quantity):
-		last_quantity = self.cur.execute('SELECT quantity FROM cart_items WHERE user_id = (?) AND prod_id =(?);', [user_id, prod_id]).fetchone()
+		with self.con.cursor() as cur:
+			cur.execute('SELECT quantity FROM cart_items WHERE user_id = %s AND prod_id = %s;', (user_id, prod_id))
+			last_quantity = cur.fetchone()
+		
 		if last_quantity:
-			sql = 'UPDATE cart_items SET quantity = (?) WHERE user_id = (?) AND prod_id = (?);'
+			sql = 'UPDATE cart_items SET quantity = %s WHERE user_id = %s AND prod_id = %s;'
 			args = (last_quantity[0] + int(quantity), user_id, prod_id)
 		else:
-			sql = 'INSERT INTO cart_items (user_id, prod_id, quantity) VALUES (?,?,?);'
+			sql = 'INSERT INTO cart_items (user_id, prod_id, quantity) VALUES (%s,%s,%s);'
 			args = (user_id, prod_id, int(quantity))
-		self.con.execute(sql, args)
-		self.con.commit()
+		with self.con.cursor() as cur:
+			cur.execute(sql, args)
 
 	def add_user(self, user_id, username):
-		check_user = self.cur.execute('SELECT COUNT(*) FROM users WHERE user_id = (?);', (user_id,)).fetchone()[0]
+		with self.con.cursor() as cur:
+			cur.execute('SELECT COUNT(*) FROM users WHERE user_id = %s;', (user_id))
+			check_user = cur.fetchone()[0]
+
 		if not check_user:
-			sql = 'INSERT INTO users (user_id, username, join_date, last_menu) VALUES (?,?,?,?);'
+			sql = 'INSERT INTO users (user_id, username, join_date, last_menu) VALUES (%s,%s,%s,%s);'
 			args = (user_id, username, datetime.now(), json.dumps(CLEAR_MENU))
-			self.con.execute(sql, args)
-			self.con.commit()
+			with self.con.cursor() as cur:
+				cur.execute(sql, args)
 	
 	def get_user_last_menu(self, user_id):
-		last_menu = self.cur.execute('SELECT last_menu FROM users WHERE user_id = (?);', (str(user_id), )).fetchone()[0]
+		with self.con.cursor() as cur:
+			cur.execute('SELECT last_menu FROM users WHERE user_id = %s;', (str(user_id)))
+			last_menu = cur.fetchone()[0]
 		return json.loads(last_menu)
 
 	def set_user_last_menu(self, user_id, menu):
@@ -51,19 +57,20 @@ class dbHelper():
 		last_menu = self.get_user_last_menu(user_id)
 		last_menu.update(menu)
 		new_menu = json.dumps(last_menu)
-		sql = 'UPDATE users SET last_menu = (?) WHERE user_id = (?);'
+		sql = 'UPDATE users SET last_menu = %s WHERE user_id = %s;'
 		args = (new_menu, user_id)
-		self.con.execute(sql, args)
-		self.con.commit()
+		with self.con.cursor() as cur:
+			cur.execute(sql, args)
 
 	def get_product_category(self):
-		sql = 'SELECT DISTINCT category FROM products;'
-		categories = self.con.execute(sql)
-		return categories.fetchall()
+		with self.con.cursor() as cur:
+			cur.execute('SELECT DISTINCT category FROM products;')
+		return cur.fetchall()
 
 	def get_product_detail(self, prod_id):
-		sql = "SELECT prod_id, prod, price, image_id, description FROM products WHERE prod_id = '{}'".format(prod_id)
-		return self.con.execute(sql).fetchone()
+		with self.con.cursor() as cur:
+			cur.execute("SELECT prod_id, prod, price, image_id, description FROM products WHERE prod_id = %s", (prod_id))
+		return cur.fetchone()
 
 	def get_products(self, menu=CLEAR_MENU, with_id=False):
 		args = None
@@ -87,8 +94,10 @@ class dbHelper():
 		if int(menu['Page']) != 1:
 			offset = (int(menu['Page']) - 1) * self.n_prod
 			sql += " OFFSET " + str(offset)
-
-		list_product = self.con.execute(sql)
+		
+		with self.con.cursor() as cur:
+			cur.execute(sql)
+		list_product = cur.fetchall()
 		
 		if with_id:
 			message = []
@@ -102,9 +111,9 @@ class dbHelper():
 		return message
 
 	def get_cart(self, user_id, type='message'):
-		sql = 'SELECT c.quantity, p.prod, p.price, c.cart_item_id, p.prod_id FROM cart_items c INNER JOIN products p ON p.prod_id=c.prod_id WHERE c.user_id = {}'.format(user_id)
-		list_cart = self.con.execute(sql)
-		items = list_cart.fetchall()
+		with self.con.cursor() as cur:
+			cur.execute('SELECT c.quantity, p.prod, p.price, c.cart_item_id, p.prod_id FROM cart_items c INNER JOIN products p ON p.prod_id=c.prod_id WHERE c.user_id = %s', (user_id))
+		items = cur.fetchall()
 
 		if type == 'list':
 			message = items
@@ -127,63 +136,81 @@ class dbHelper():
 		return message
 
 	def get_cart_detail(self, item_id):
-		sql = "SELECT p.prod_id, p.prod, p.price, p.image_id, p.description, c.quantity, c.cart_item_id FROM cart_items c INNER JOIN products p ON p.prod_id=c.prod_id WHERE cart_item_id = '{}'".format(item_id)
-		return self.con.execute(sql).fetchone()
+		with self.con.cursor() as cur:
+			cur.execute("SELECT p.prod_id, p.prod, p.price, p.image_id, p.description, c.quantity, c.cart_item_id FROM cart_items c INNER JOIN products p ON p.prod_id=c.prod_id WHERE cart_item_id = %s", (item_id))
+		return cur.fetchone()
 	
 	def remove_cart(self, item_id):
-		sql = 'DELETE FROM cart_items WHERE cart_item_id = {};'.format(item_id)
-		self.con.execute(sql)
-		self.con.commit()
+		with self.con.cursor() as cur:
+			cur.execute('DELETE FROM cart_items WHERE cart_item_id = %s;', (item_id))
 
 	def update_cart(self, item_id, quantity):
-		sql = 'UPDATE cart_items SET quantity = {} WHERE cart_item_id = {}'.format(quantity, item_id)
-		self.con.execute(sql)
-		self.con.commit()
+		with self.con.cursor() as cur:
+			cur.execute('UPDATE cart_items SET quantity = %s WHERE cart_item_id = %s', (quantity, item_id))
 
 	def clear_cart(self, user_id):
-		sql = 'DELETE FROM cart_items WHERE user_id = {};'.format(user_id)
-		self.con.execute(sql)
-		self.con.commit()
+		with self.con.cursor() as cur:
+			cur.execute('DELETE FROM cart_items WHERE user_id = %s;', (user_id))
 
 	def add_order(self, user_id):
 		menu = self.get_user_last_menu(user_id)
 		cart = self.get_cart(user_id, type='list')
 		total = sum([i[0]*i[2] for i in cart])
-		sql = 'INSERT INTO orders (user_id, created_date, total_price, lat_delivery, lon_delivery, address_delivery, note) VALUES (?,?,?,?,?,?,?);'
+		sql = 'INSERT INTO orders (user_id, created_date, total_price, lat_delivery, lon_delivery, address_delivery, note) VALUES (%s,%s,%s,%s,%s,%s,%s);'
 		args = (user_id, datetime.now(), total, menu['Lat'], menu['Lon'], menu['Address'], menu['Note'])
-		order_id = self.con.execute(sql, args).lastrowid
-		self.con.commit()
-		sql2 = 'INSERT INTO order_items (order_id, prod_id, quantity, price_each) VALUES (?,?,?,?)'
+		with self.con.cursor() as cur:
+			cur.execute(sql, args)
+			order_id = cur.lastrowid
+
+		sql2 = 'INSERT INTO order_items (order_id, prod_id, quantity, price_each) VALUES (%s,%s,%s,%s)'
 		args2 = [(order_id, i[4], i[0], i[2]) for i in cart]
-		self.con.executemany(sql2, args2)
-		self.con.commit()
+		print(args2)
+		with self.con.cursor() as cur:
+			cur.executemany(sql2, args2)
 		self.clear_cart(user_id)
 		self.set_user_last_menu(user_id, 'clear')
 
 	def get_order(self, user_id):
-		sql = 'SELECT order_id, created_date, total_price, address_delivery, note FROM orders WHERE user_id = {} ORDER BY created_date DESC LIMIT 5'.format(user_id)
-		list_order = self.con.execute(sql)
-		message = 'Showing 5 last order:\n'
-		for idx, order in enumerate(list_order):
-			sql2 = 'SELECT o.quantity, p.prod, o.price_each FROM order_items o INNER JOIN products p ON p.prod_id=o.prod_id WHERE order_id = {}'.format(order[0])
-			list_item = self.con.execute(sql2).fetchall()
-			if idx != 0:
-				message += '\n\n============  #####  ============\n'
-			order_at = datetime.strptime(order[1], '%Y-%m-%d %H:%M:%S.%f').strftime('%d/%m/%y %H:%M:%S')
-			message += '\n*Order at:* ' + order_at
-			message += '\n\n*List item:*'
-			for item in list_item:
-				message += '\n' + ('' if item[0]>=10 else ' ') + str(item[0]) + ' x ' + item[1] + ' @ {:0,.0f}'.format(item[2])
-			message += '\n*Total:* {:0,.0f}'.format(order[2])
-			message += '\n\n*Delivery address:* ' + order[3]
-			message += '\n\n*Note:* ' + order[4]
+		with self.con.cursor() as cur:
+			cur.execute('SELECT order_id, created_date, total_price, address_delivery, note FROM orders WHERE user_id = %s ORDER BY created_date DESC LIMIT 5', (user_id))
+		list_order = cur.fetchall()
+		
+		if len(list_order) > 0:
+			message = 'Showing 5 last order:\n'
+			for idx, order in enumerate(list_order):
+				with self.con.cursor() as cur:
+					cur.execute('SELECT o.quantity, p.prod, o.price_each FROM order_items o INNER JOIN products p ON p.prod_id=o.prod_id WHERE order_id = %s', (order[0]))
+				list_item = cur.fetchall()
+				
+				if idx != 0:
+					message += '\n\n============  #####  ============\n'
+				order_at = order[1].strftime('%d/%m/%Y  %H:%M')
+				message += '\n*Order at:*  ' + order_at
+				message += '\n\n*List item:*'
+				for item in list_item:
+					message += '\n' + ('' if item[0]>=10 else ' ') + str(item[0]) + ' x ' + item[1] + ' @ {:0,.0f}'.format(item[2])
+				message += '\n*Total:* {:0,.0f}'.format(order[2])
+				message += '\n\n*Delivery address:* ' + order[3]
+				message += '\n\n*Note:* ' + order[4]
+
+		else:
+			message = "You haven't ordered yet. You can order from Product List."
 		return message
 
 	def get_promo(self):
-		sql = 'SELECT image_id, caption FROM active_promo;'
-		return self.con.execute(sql).fetchall()
+		with self.con.cursor() as cur:
+			cur.execute('SELECT image_id, caption FROM active_promo;')
+		return cur.fetchall()
 
-	def initial_setup(self):
+	def reset_db(self):
+		drop_script = """
+			DROP TABLE IF EXISTS products;
+			DROP TABLE IF EXISTS users;
+			DROP TABLE IF EXISTS cart_items;
+			DROP TABLE IF EXISTS orders;
+			DROP TABLE IF EXISTS order_items;
+			DROP TABLE IF EXISTS active_promo;
+			"""
 		sql_script = """
 			CREATE TABLE products (
 				prod_id INTEGER PRIMARY KEY,
@@ -191,23 +218,23 @@ class dbHelper():
 				category VARCHAR(50),
 				price FLOAT,
 				stock INT,
-				image_id VARCHAR(50),
+				image_id VARCHAR(100),
 				description VARCHAR(255));
 
 			CREATE TABLE users (
 				user_id INTEGER PRIMARY KEY,
 				username VARCHAR(50),
 				join_date DATETIME,
-				last_menu VARCHAR(50));
+				last_menu VARCHAR(255));
 
 			CREATE TABLE cart_items (
-				cart_item_id INTEGER PRIMARY KEY AUTOINCREMENT,
+				cart_item_id INTEGER PRIMARY KEY AUTO_INCREMENT,
 				user_id INT,
 				prod_id INT,
 				quantity INT);
 			
 			CREATE TABLE orders (
-				order_id INTEGER PRIMARY KEY AUTOINCREMENT,
+				order_id INTEGER PRIMARY KEY AUTO_INCREMENT,
 				user_id INT,
 				created_date DATETIME,
 				total_price FLOAT,
@@ -225,7 +252,7 @@ class dbHelper():
 			CREATE TABLE active_promo (
 				promo_id INT,
 				caption VARCHAR(255),
-				image_id VARCHAR(50));
+				image_id VARCHAR(100));
 
 			INSERT INTO products VALUES
 				(1, 'Bango Manis Refil 600ml', 'Ingredients', 24600, 356, 'AgADBQADx6cxGzzjAAFULg_aWPgG56pBTsoyAARk3-t4a85mVEY1AgABAg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis tristique imperdiet.'),
@@ -272,4 +299,7 @@ class dbHelper():
 			INSERT INTO active_promo VALUES
 				(1, "New year's promo", 'AgADBQADrKcxG9P_8Ffuiv20WVyDs-YzyjIABDa7HDuAONv62jACAAEC')
 			"""
-		self.cur.executescript(sql_script)
+		with self.con.cursor() as cur:
+			for sql in drop_script.split(';') + sql_script.split(';'):
+				if len(sql.strip()) > 0:
+					cur.execute(sql)

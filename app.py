@@ -15,14 +15,34 @@ handler = Handler()
 @app.route('/', methods=['GET', 'POST'])
 def webhook():
 	if request.method == 'POST':
-		req = request.get_json()
-		upd = handler.extract_updates(req)
-		handler.handle(upd)
-	return 'ok'
+		try:
+			req = request.get_json()
+			upd = handler.extract_updates(req)
+			handler.handle(upd)
+			res = 'ok'
+			msg = ''
+		except Exception as e:
+			res = 'error'
+			msg = str(e)
+	else:
+		res = 'ok from get'
+		msg = ''
+	data = {'result': res, 'message': msg}
+	return jsonify(data)
 
 @app.route('/set_webhook')
 def set_webhook():
 	res = handler.set_webhook()
+	data = {'result': res}
+	return jsonify(data)
+
+@app.route('/reset_db')
+def reset_db():
+	try:
+		handler.reset_db()
+		res = 'ok'
+	except:
+		res = 'error'
 	data = {'result': res}
 	return jsonify(data)
 

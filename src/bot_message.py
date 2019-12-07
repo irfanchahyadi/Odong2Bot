@@ -34,10 +34,10 @@ KEYBOARD = {
 	 [{'text':'Sort', 'callback_data':'Sort'}, {'text':'Search', 'callback_data':'Search'}, {'text':'Filter', 'callback_data':'Filter'}, {'text':'Clear', 'callback_data':'Clear'}]],
 
 	 'sort_product':
-	 [[{'text':'Sort by Highest Price', 'callback_data':'SortbyHighestPrice'}],
-	  [{'text':'Sort by Lowest Price', 'callback_data':'SortbyLowestPrice'}],
-	  [{'text':'Sort by Name A-Z', 'callback_data':'SortbyNameA-Z'}],
-	  [{'text':'Sort by Name Z-A', 'callback_data':'SortbyNameZ-A'}],
+	 [[{'text':'Highest Price', 'callback_data':'SortbyHighestPrice'}],
+	  [{'text':'Lowest Price', 'callback_data':'SortbyLowestPrice'}],
+	  [{'text':'Name A-Z', 'callback_data':'SortbyNameA-Z'}],
+	  [{'text':'Name Z-A', 'callback_data':'SortbyNameZ-A'}],
 	  [{'text':'Cancel', 'callback_data':'CancelToProduct'}]],
 
 	 'cart':

@@ -18,6 +18,9 @@ class Handler():
 		res = self.api.set_webhook()
 		return res
 
+	def reset_db(self):
+		self.db.reset_db()
+
 	def get_me(self):
 		return self.api.get_me('username')
 
@@ -88,7 +91,7 @@ class Handler():
 				if data['data'] == 'Sort':
 					text = 'Sort by :'
 				elif data['data'] == 'Search':
-					self.db.set_user_last_menu(upd['user_id'], {'State': 'Search'})
+					self.db.set_user_last_menu(upd['user_id'], {'Page': 1, 'State': 'Search'})
 					text = 'Type keyword for search :'
 				elif data['data'] == 'Filter':
 					text = 'Filter by category :'
@@ -100,9 +103,9 @@ class Handler():
 					data['products'] = self.db.get_products(menu, with_id=True)
 				else:
 					if data['data'].startswith('Sortby'):
-						self.db.set_user_last_menu(upd['user_id'], {'Sort': data['data'][6:]})
+						self.db.set_user_last_menu(upd['user_id'], {'Page': 1, 'Sort': data['data'][6:]})
 					elif data['data'].startswith('FilterCategory'):
-						self.db.set_user_last_menu(upd['user_id'], {'Filter': data['data'][14:].replace('_', ' ')})
+						self.db.set_user_last_menu(upd['user_id'], {'Page': 1, 'Filter': data['data'][14:].replace('_', ' ')})
 					elif data['data'] in ['Clear', 'CancelToProduct']:
 						self.db.set_user_last_menu(upd['user_id'], 'clear')
 					elif data['data'].startswith('OrderProdId'):

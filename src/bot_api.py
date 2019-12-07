@@ -205,7 +205,7 @@ class botAPI():
 		elif data['data'] == 'Filter':
 			keyboard = []
 			for category in data['categories']:
-				keyboard.append([{'text':'Category: ' + category[0], 'callback_data':'FilterCategory' + category[0].replace(' ', '_')}])
+				keyboard.append([{'text':category[0], 'callback_data':'FilterCategory' + category[0].replace(' ', '_')}])
 			keyboard.append([{'text':'Cancel', 'callback_data':'CancelToProduct'}])
 		elif data['data'] == 'OrderProduct':
 			keyboard = []
