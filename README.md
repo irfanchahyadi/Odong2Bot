@@ -2,7 +2,7 @@
 Telegram chatbot for online shop
 
 <p align="center">
-  <img src="demo/demo.gif"><br/>
+  <img src="demo/demo.gif" height="500"><br/>
   <i>Odong2Bot</i>
 </p>
 
