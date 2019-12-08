@@ -107,8 +107,9 @@ FLUSH PRIVILEGES;
 sudo service mysql restart
 ```
 
-Configure zappa
+Activate again venv environment, then configure zappa
 ```
+source venv/bin/activate
 zappa init
 ```
 Basically, just press enter to each question, the default configuration should be good enough. Then
