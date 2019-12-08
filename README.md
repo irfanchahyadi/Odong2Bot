@@ -21,15 +21,14 @@ I don't know that Telegram wrapper package like [python-telegram-bot](https://gi
 
 ## Environment variable
 provide .env file inside src folder contain
+```python
+TOKEN =                   # bot token given from BotFather
+URL =                     # this for set webhook, receive after success deploy it to AWS Lambda (read below)
+MYSQL_USERNAME =          # create when configuring mysql (read below)
+MYSQL_PASSWORD =          # create when configuring mysql (read below)
+MYSQL_DATABASE =          # create when configuring mysql (read below)
+MYSQL_HOSTNAME =          # mysql server hostname
 ```
-TOKEN =              # test
-URL = 
-MYSQL_USERNAME = 
-MYSQL_PASSWORD = 
-MYSQL_DATABASE = 
-MYSQL_HOSTNAME = 
-```
-
 
 
 ## How to deploy
@@ -73,16 +72,11 @@ pip3 install --no-cache-dir -r requirements.txt
 
 I use `--no-cache-dir` option to avoid MemoryError when installing zappa on my t2.micro EC2 with only 1 Gb Memory.
 
-Configure zappa
-```
-zappa init
-```
-Basically, just press enter to each question, the default configuration should be good enough.
-
 Before  deploy it, we need to configure mysql to enable remote access. You can skip this step if you done it before.
 
-Open and edit my.cnf
+Exit from virtual environment, then open and edit my.cnf
 ```
+deactivate
 nano /etc/mysql/my.cnf
 ```
 
@@ -98,10 +92,25 @@ sudo service mysql restart
 sudo ufw allow 3306/tcp
 ```
 
-Login to mysql as root, add user bot, then restart mysql again
+Login to mysql as root, create new database, add user bot, then restart mysql again
 ```
 mysql -u root -p
+CREATE DATABASE odong2bot;
 GRANT ALL PRIVILEGES ON *.* TO bot@'%' IDENTIFIED BY 'password';
 FLUSH PRIVILEGES;
 sudo service mysql restart
+```
+
+Configure zappa
+```
+zappa init
+```
+Basically, just press enter to each question, the default configuration should be good enough. Then
+```
+zappa deploy dev
+```
+If this command run successfully, you will get the url where your lambda service deploy.
+Copy it to URL in `.env` file, then update it with command
+```
+zappa update
 ```
