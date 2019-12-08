@@ -1,6 +1,11 @@
 # Odong2Bot
 Telegram chatbot for online shop
 
+<p align="center">
+  <img src="demo/demo.gif"><br/>
+  <i>Odong2Bot</i>
+</p>
+
 This bot pretend to be FMCG online shop, user can see list of product, order, and checkout.
 You can try it on [@Odong2bot](https://t.me/Odong2bot).
 Here are some of the features:
@@ -10,7 +15,7 @@ Here are some of the features:
 - See list of item in Cart
 - Edit and Remove item in Cart
 - Checkout Order
-- Send Location for delivery and add Note
+- Send Location and auto detect address (reverse geocode from [openstreetmap](https://www.openstreetmap.org/))
 - See Historical Transaction
 - See Today's Promo
 
@@ -20,7 +25,7 @@ I don't know that Telegram wrapper package like [python-telegram-bot](https://gi
 
 
 ## Environment variable
-provide .env file inside src folder contain
+provide `.env` file inside `/src` folder contain
 ```python
 TOKEN =                   # bot token given from BotFather
 URL =                     # this for set webhook, receive after success deploy it to AWS Lambda (read below)
@@ -33,6 +38,7 @@ MYSQL_HOSTNAME =          # mysql server hostname
 
 ## How to deploy
 Further will be just technical stuff.
+
 Here are step by step how i deploy this bot to my Free Tier AWS Lambda from Ubuntu machine:
 
 First, get your `AWS Access Key ID` and `AWS Secret Access Key` from AWS IAM Service.
@@ -66,13 +72,13 @@ pip3 install --no-cache-dir -r requirements.txt
 **This bot require :**
 - [Flask](https://github.com/pallets/flask), for building web service
 - [requests](https://github.com/psf/requests), for sending HTTP request to Telegram API
-- [python-dotenv](https://github.com/theskumar/python-dotenv), for storing secret key like token and password
+- [python-dotenv](https://github.com/theskumar/python-dotenv), for store and load secret key like token and password
 - [PyMySQL](https://github.com/PyMySQL/PyMySQL), connector to mysql database
 - [zappa](https://github.com/Miserlou/Zappa), easy build and deploy web service to serverless Service like AWS Lambda
 
 I use `--no-cache-dir` option to avoid MemoryError when installing zappa on my t2.micro EC2 with only 1 Gb Memory.
 
-Before  deploy it, we need to configure mysql to enable remote access. You can skip this step if you done it before.
+Before  deploy it, we need to configure mysql to enable remote access. You can skip this step if you have done it before.
 
 Exit from virtual environment, then open and edit my.cnf
 ```
@@ -96,7 +102,7 @@ Login to mysql as root, create new database, add user bot, then restart mysql ag
 ```
 mysql -u root -p
 CREATE DATABASE odong2bot;
-GRANT ALL PRIVILEGES ON *.* TO bot@'%' IDENTIFIED BY 'password';
+GRANT ALL PRIVILEGES ON odong2bot.* TO bot@'%' IDENTIFIED BY 'password';
 FLUSH PRIVILEGES;
 sudo service mysql restart
 ```
