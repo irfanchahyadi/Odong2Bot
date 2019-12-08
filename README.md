@@ -2,6 +2,7 @@
 Telegram chatbot for online shop
 
 This bot pretend to be FMCG online shop, user can see list of product, order, and checkout.
+You can try it on [@Odong2bot](https://t.me/Odong2bot).
 Here are some of the features:
 - Register user (automatically when start chating with bot)
 - See list of Product
@@ -18,10 +19,25 @@ For interact with Telegram, i use pure python directly to Telegram API without u
 I don't know that Telegram wrapper package like [python-telegram-bot](https://github.com/python-telegram-bot/python-telegram-bot) exists. If i know erlier, i would like to use it from the start.
 
 
+## Environment variable
+provide .env file inside src folder contain
+```
+TOKEN =              # test
+URL = 
+MYSQL_USERNAME = 
+MYSQL_PASSWORD = 
+MYSQL_DATABASE = 
+MYSQL_HOSTNAME = 
+```
+
+
+
 ## How to deploy
+Further will be just technical stuff.
 Here are step by step how i deploy this bot to my Free Tier AWS Lambda from Ubuntu machine:
 
-First, get your `AWS Access Key ID` and `AWS Secret Access Key` from AWS IAM Service
+First, get your `AWS Access Key ID` and `AWS Secret Access Key` from AWS IAM Service.
+
 Then configure AWS Account from your local
 ```
 pip3 install awscli
@@ -53,5 +69,39 @@ pip3 install --no-cache-dir -r requirements.txt
 - [requests](https://github.com/psf/requests), for sending HTTP request to Telegram API
 - [python-dotenv](https://github.com/theskumar/python-dotenv), for storing secret key like token and password
 - [PyMySQL](https://github.com/PyMySQL/PyMySQL), connector to mysql database
-- [zappa](https://github.com/Miserlou/Zappa), easy build and deploy web service to serverless Service like AWS Lambda 
-I use `--no-cache-dir` option to avoid MemoryError when installing zappa on my t2.micro EC2 with 1 Gb Memory.
+- [zappa](https://github.com/Miserlou/Zappa), easy build and deploy web service to serverless Service like AWS Lambda
+
+I use `--no-cache-dir` option to avoid MemoryError when installing zappa on my t2.micro EC2 with only 1 Gb Memory.
+
+Configure zappa
+```
+zappa init
+```
+Basically, just press enter to each question, the default configuration should be good enough.
+
+Before  deploy it, we need to configure mysql to enable remote access. You can skip this step if you done it before.
+
+Open and edit my.cnf
+```
+nano /etc/mysql/my.cnf
+```
+
+Replace this line, or add if not exists
+```
+[mysqld]
+bind-address = 0.0.0.0
+```
+
+Restart mysql service and allow port 3306 to use by mysql
+```
+sudo service mysql restart
+sudo ufw allow 3306/tcp
+```
+
+Login to mysql as root, add user bot, then restart mysql again
+```
+mysql -u root -p
+GRANT ALL PRIVILEGES ON *.* TO bot@'%' IDENTIFIED BY 'password';
+FLUSH PRIVILEGES;
+sudo service mysql restart
+```
