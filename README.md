@@ -15,7 +15,7 @@ Here are some of the features:
 - See list of item in Cart
 - Edit and Remove item in Cart
 - Checkout Order
-- Send Location and auto detect address (reverse geocode from [openstreetmap](https://www.openstreetmap.org/))
+- Send Location and auto detect address (reverse geocode from [OpenStreetMap](https://www.openstreetmap.org/))
 - See Historical Transaction
 - See Today's Promo
 
