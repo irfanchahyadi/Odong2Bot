@@ -27,7 +27,7 @@ I don't know that Telegram wrapper package like [python-telegram-bot](https://gi
 ## Environment variable
 provide `.env` file inside `/src` folder contain
 ```python
-TOKEN =                   # bot token given from BotFather
+TOKEN =                   # bot token get it from BotFather
 URL =                     # this for set webhook, receive after success deploy it to AWS Lambda (read below)
 MYSQL_USERNAME =          # create when configuring mysql (read below)
 MYSQL_PASSWORD =          # create when configuring mysql (read below)
@@ -83,7 +83,7 @@ Before  deploy it, we need to configure mysql to enable remote access. You can s
 Exit from virtual environment, then open and edit my.cnf
 ```
 deactivate
-nano /etc/mysql/my.cnf
+sudo nano /etc/mysql/my.cnf
 ```
 
 Replace this line, or add if not exists
@@ -104,8 +104,15 @@ mysql -u root -p
 CREATE DATABASE odong2bot;
 GRANT ALL PRIVILEGES ON odong2bot.* TO bot@'%' IDENTIFIED BY 'password';
 FLUSH PRIVILEGES;
+exit
 sudo service mysql restart
 ```
+
+Edit Inbound Rule
+- Go to your EC2 console
+- Click security group on your instance
+- Edit Inbound rule
+- Add MYSQL/Aurora type in port 3306 from anywhere
 
 Activate again venv environment, then configure zappa
 ```
@@ -121,3 +128,7 @@ Copy it to URL in `.env` file, then update it with command
 ```
 zappa update
 ```
+
+Set webhook & reset database
+`url/set_webhook` to set webhook to Telegram API
+`url/reset_db` to activate and reset database (optional)
