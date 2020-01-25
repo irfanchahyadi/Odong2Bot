@@ -130,5 +130,5 @@ zappa update
 ```
 
 Set webhook & reset database
-`url/set_webhook` to set webhook to Telegram API
-`url/reset_db` to activate and reset database (optional)
+- `url/set_webhook` to set webhook to Telegram API
+- `url/reset_db` to activate and reset database (optional)
