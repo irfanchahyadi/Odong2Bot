@@ -32,5 +32,8 @@ I don't know that Telegram wrapper package like [python-telegram-bot](https://gi
 - [zappa](https://github.com/Miserlou/Zappa), easy build and deploy web service to serverless Service like AWS Lambda
 
 
+## How to deploy
+[Here](demo/installation.md) step by step how I deploy this bot on AWS Lambda.
+
 ## License
 [MIT License](LICENSE)
